@@ -5,8 +5,7 @@ Foodgram
 *Проект Foodgram «Продуктовый помощник» позволяет пользователи публиковать рецепты,
 подписываться на публикации других пользователей, добавлять понравившиеся рецепты
 в список «Избранное», а перед походом в магазин скачивать сводный список продуктов,
-необходимых для приготовления выбранных блюд.
-*
+необходимых для приготовления выбранных блюд.*
 
 
 ### Как запустить проект:
@@ -62,20 +61,20 @@ GET api/recipes/
 
 **Response sample:**
 {
-    "id": 0,
-    "tags": [
-        + {...}
-    ],
-    "author": {},
-    "ingredients": [
-        + {...}
-    ],
-    "is_favorited": true,
-    "is_in_shopping_cart": true,
-    "name": "string",
-    "image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
-    "text": "string",
-    "cooking_time": 1
+&emsp;"id": 0,
+&emsp;"tags": [
+&emsp;&emsp;+ {...}
+&emsp;],
+&emsp;"author": {},
+&emsp;"ingredients": [
+&emsp;&emsp;+ {...}
+&emsp;],
+&emsp;"is_favorited": true,
+&emsp;"is_in_shopping_cart": true,
+&emsp;"name": "string",
+&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
+&emsp;"text": "string",
+&emsp;"cooking_time": 1
 }
 
 2. **Добавление рецепта в список покупок**
@@ -85,8 +84,8 @@ POST /api/recipes/{id}/shopping_cart/
 
 **Response sample:**
 {
-    "id": 0,
-    "name": "string",
-    "image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
-    "cooking_time": 1
+&emsp;"id": 0,
+&emsp;"name": "string",
+&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
+&emsp;"cooking_time": 1
 }
