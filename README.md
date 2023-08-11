@@ -60,22 +60,22 @@ python3 manage.py runserver
 GET api/recipes/
 
 **Response sample:**
-{
-&emsp;"id": 0,
-&emsp;"tags": [
-&emsp;&emsp;+ {...}
-&emsp;],
-&emsp;"author": {},
-&emsp;"ingredients": [
-&emsp;&emsp;+ {...}
-&emsp;],
-&emsp;"is_favorited": true,
-&emsp;"is_in_shopping_cart": true,
-&emsp;"name": "string",
-&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
-&emsp;"text": "string",
-&emsp;"cooking_time": 1
-}
+{  
+&emsp;"id": 0,  
+&emsp;"tags": [  
+&emsp;&emsp;+ {...}  
+&emsp;],  
+&emsp;"author": {},  
+&emsp;"ingredients": [  
+&emsp;&emsp;+ {...}  
+&emsp;],  
+&emsp;"is_favorited": true,  
+&emsp;"is_in_shopping_cart": true,  
+&emsp;"name": "string",  
+&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
+&emsp;"text": "string",  
+&emsp;"cooking_time": 1  
+}  
 
 2. **Добавление рецепта в список покупок**
 
@@ -83,9 +83,9 @@ GET api/recipes/
 POST /api/recipes/{id}/shopping_cart/
 
 **Response sample:**
-{
-&emsp;"id": 0,
-&emsp;"name": "string",
-&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",
-&emsp;"cooking_time": 1
+{  
+&emsp;"id": 0,  
+&emsp;"name": "string",  
+&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
+&emsp;"cooking_time": 1  
 }
