@@ -1,12 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    Ingredient,
-    Tag,
-    Recipe,
-    IngredientRecipe,
-    TagRecipe
-)
+from .models import Ingredient, IngredientRecipe, Recipe, Tag, TagRecipe
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -28,8 +22,8 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('author', 'name')
     list_filter = ('author', 'name', 'tags')
     inlines = [
-            Ingredientline,
-            Tagline
+        Ingredientline,
+        Tagline
         ]
 
 

@@ -26,7 +26,6 @@ class CustomUser(AbstractUser):
         verbose_name='Фамилия'
     )
     is_subscribed = models.BooleanField(default=False)
-    
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [

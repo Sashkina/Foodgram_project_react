@@ -1,21 +1,11 @@
 import base64
 
-from djoser.serializers import UserSerializer
 from django.core.files.base import ContentFile
-from recipes.models import (
-    Ingredient,
-    Recipe,
-    Tag,
-    IngredientRecipe,
-    Subscribe,
-    Favorite,
-    ShoppingCart
-)
+from djoser.serializers import UserSerializer
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Subscribe, Tag)
 from rest_framework import serializers
-from rest_framework.relations import (
-    SlugRelatedField,
-    PrimaryKeyRelatedField
-)
+from rest_framework.relations import PrimaryKeyRelatedField, SlugRelatedField
 from users.models import CustomUser
 
 
@@ -73,7 +63,9 @@ class IngredientRecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для модели IngredientRecipe на вывод"""
     id = serializers.IntegerField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name')
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit')
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         fields = (
@@ -138,7 +130,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'cooking_time',
             'is_favorited',
             'is_in_shopping_cart'
-        )   
+        )
         model = Recipe
 
 
@@ -180,7 +172,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         user = request.user
         return Favorite.objects.filter(recipe=obj, user=user).exists()
 
-    def get_is_in_shopping_cart(self, obj):   
+    def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         user = request.user
         return ShoppingCart.objects.filter(recipe=obj, user=user).exists()
@@ -234,7 +226,7 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'image',
-            'cooking_time'            
+            'cooking_time'
         )
         model = Recipe
 
@@ -257,7 +249,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'last_name',
             'is_subscribed',
             'recipes',
-            'recipes_count'    
+            'recipes_count'
         )
         model = CustomUser
 

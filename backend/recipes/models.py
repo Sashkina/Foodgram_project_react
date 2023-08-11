@@ -44,7 +44,7 @@ class Recipe(models.Model):
         verbose_name='Название'
     )
     image = models.ImageField(
-            upload_to='recipes/images/',
+        upload_to='recipes/images/',
     )
     text = models.TextField(
         verbose_name='Описание'
@@ -124,7 +124,7 @@ class Favorite(models.Model):
         CustomUser,
         on_delete=models.CASCADE,
         related_name='favorite',
-        )
+    )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -138,7 +138,7 @@ class ShoppingCart(models.Model):
         CustomUser,
         on_delete=models.CASCADE,
         related_name='in_cart',
-        )
+    )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
