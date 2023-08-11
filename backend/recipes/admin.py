@@ -24,7 +24,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = [
         Ingredientline,
         Tagline
-        ]
+    ]
 
 
 admin.site.register(Ingredient, IngredientAdmin)

@@ -8,7 +8,7 @@ PATH_TO_UPLOAD = '/Users/kristina/Dev/foodgram-project-react/data/'
 
 class Command(BaseCommand):
     help = 'Наполняет БД из csv'
-    
+
     def handle(self, *args, **kwargs):
         try:
             with open(
