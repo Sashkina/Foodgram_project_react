@@ -59,7 +59,7 @@ python3 manage.py runserver
 **Request sample:**
 GET api/recipes/
 
-**Response sample:**
+**Response sample:**  
 {  
 &emsp;"id": 0,  
 &emsp;"tags": [  
@@ -77,12 +77,13 @@ GET api/recipes/
 &emsp;"cooking_time": 1  
 }  
 
+
 2. **Добавление рецепта в список покупок**
 
 **Request sample:**
 POST /api/recipes/{id}/shopping_cart/
 
-**Response sample:**
+**Response sample:**  
 {  
 &emsp;"id": 0,  
 &emsp;"name": "string",  
