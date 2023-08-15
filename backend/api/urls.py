@@ -19,7 +19,7 @@ router.register(r'tags', TagViewSet, basename='tags')
 urlpatterns = [
     path(
         'users/set_password/',
-        SetPasswordView.as_view,
+        SetPasswordView.as_view(),
         name='password'
     ),
     path('recipes/download_shopping_cart/',

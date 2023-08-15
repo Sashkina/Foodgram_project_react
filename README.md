@@ -52,6 +52,13 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
+Данные для входа в админку:
+
+```
+email: kri-s@list.ru  
+password: b191988
+```
+
 ### Примеры:
 
 1. **Получение списка всех рецептов**

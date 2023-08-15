@@ -1,6 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
+from django.db import transaction
 from djoser.serializers import UserSerializer
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Subscribe, Tag)
@@ -36,9 +37,12 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        user = request.user
-        return Subscribe.objects.filter(following=obj, user=user).exists()
+        try:
+            request = self.context.get('request')
+            user = request.user
+            return Subscribe.objects.filter(following=obj, user=user).exists()
+        except Exception:
+            return False
 
 
 class PasswordSerializer(serializers.Serializer):
@@ -178,6 +182,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return ShoppingCart.objects.filter(recipe=obj, user=user).exists()
 
     def ingredients_for_recipe(self, recipe, ingredients):
+        recipe_ingredient_list = []
         for ingredient in ingredients:
             current_ingredient = Ingredient.objects.get(
                 pk=ingredient['id'])
@@ -185,8 +190,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 recipe=recipe,
                 ingredient=current_ingredient,
                 amount=ingredient['amount'])
-            recipe_ingredient.save()
+            recipe_ingredient_list.append(recipe_ingredient)
+        IngredientRecipe.objects.bulk_create(recipe_ingredient_list)
 
+    @transaction.atomic
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -195,6 +202,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         self.ingredients_for_recipe(recipe, ingredients)
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         instance.image = validated_data.get('image', instance.image)
@@ -211,6 +219,40 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         self.ingredients_for_recipe(instance, ingredients_data)
         instance.save()
         return instance
+
+    def validate_favorite(self, user, recipe):
+        is_added = Favorite.objects.filter(
+            user=user, recipe=recipe).exists()
+
+        if is_added:
+            raise serializers.ValidationError(
+                {'detail': 'Рецепт уже добавлен в избранное'}
+            )
+
+    def validate_not_favorite(self, user, recipe):
+        favorite = Favorite.objects.filter(user=user, recipe=recipe)
+        if not favorite:
+            raise serializers.ValidationError(
+                {'detail': 'Рецепт не добавлен в избранное'}
+            )
+        return favorite
+
+    def validate_shopping_cart(self, user, recipe):
+        is_added = ShoppingCart.objects.filter(
+            user=user, recipe=recipe).exists()
+        if is_added:
+            raise serializers.ValidationError(
+                {'detail': 'Рецепт уже в списке покупок'}
+            )
+
+    def validate_not_shopping_cart(self, user, recipe):
+        shopping_cart_item = ShoppingCart.objects.filter(
+            recipe=recipe, user=user)
+        if not shopping_cart_item:
+            raise serializers.ValidationError(
+                {'detail': 'Рецепт не в списке покупок'}
+            )
+        return shopping_cart_item
 
     def to_representation(self, instance):
         serializer = RecipeReadSerializer(instance)
@@ -255,3 +297,26 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+    def validate_subscription(self, user, author):
+        if user == author:
+            raise serializers.ValidationError(
+                {'detail': 'Нельзя подписаться на себя!'}
+            )
+
+        _, created = Subscribe.objects.get_or_create(
+                user=user,
+                following=author
+        )
+        if not created:
+            raise serializers.ValidationError(
+                {'detail': 'Пользователь уже подписан на данного автора'}
+            )
+
+    def validate_unsubscription(self, user, author):
+        subscription = Subscribe.objects.filter(user=user, following=author)
+        if not subscription:
+            raise serializers.ValidationError(
+                {'detail': 'Пользователь не подписан на данного автора'}
+            )
+        return subscription

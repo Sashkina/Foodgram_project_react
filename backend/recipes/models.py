@@ -60,7 +60,17 @@ class Recipe(models.Model):
         through='TagRecipe'
     )
     cooking_time = models.PositiveIntegerField(
-        verbose_name='Время приготовления'
+        verbose_name='Время приготовления',
+        validators=[
+            MinValueValidator(
+                1,
+                'Минимальное время приготовления - 1'
+            ),
+            MaxValueValidator(
+                400,
+                'Максимальное время приготовления - 400'
+            )
+        ]
     )
     is_favorited = models.BooleanField(default=False)
     is_in_shopping_cart = models.BooleanField(default=False)
@@ -80,7 +90,16 @@ class IngredientRecipe(models.Model):
         on_delete=models.CASCADE,
     )
     amount = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(400)]
+        validators=[
+            MinValueValidator(
+                1,
+                'Минимальное количество ингредиента - 1'
+            ),
+            MaxValueValidator(
+                5000,
+                'Максимальное количество ингредиента - 5000'
+            )
+        ]
     )
 
 
@@ -131,6 +150,14 @@ class Favorite(models.Model):
         related_name='favorite',
     )
 
+    @classmethod
+    def create(cls, user, recipe):
+        item = cls(user=user, recipe=recipe)
+        recipe.is_favorited = True
+        recipe.save()
+        item.save()
+        return item
+
 
 class ShoppingCart(models.Model):
     """Модель для списка покупок"""
@@ -144,3 +171,11 @@ class ShoppingCart(models.Model):
         on_delete=models.CASCADE,
         related_name='in_cart',
     )
+
+    @classmethod
+    def create(cls, user, recipe):
+        item = cls(user=user, recipe=recipe)
+        recipe.is_in_shopping_cart = True
+        recipe.save()
+        item.save()
+        return item

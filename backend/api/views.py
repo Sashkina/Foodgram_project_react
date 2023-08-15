@@ -1,16 +1,18 @@
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
                             Subscribe, Tag)
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from users.models import CustomUser
 
+from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly, ReadOnly
 from .serializers import (CustomUserSerializer, IngredientSerializer,
                           PasswordSerializer, RecipeReadSerializer,
@@ -22,6 +24,7 @@ class CustomUserViewSet(UserViewSet):
     """Эндпоинт для работы с моделью CustomUser"""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
+    pagination_class = RecipePagination
 
     @action(
         detail=False,
@@ -31,11 +34,11 @@ class CustomUserViewSet(UserViewSet):
     def subscriptions(self, request):
         """Вывод всех подписок юзера"""
         user = request.user
-        subscriptions = CustomUser.objects.filter(
-            following__user=user
-        )
+        subscriptions = Subscribe.objects.filter(
+            user=user
+        ).select_related('following')
         serializer = SubscribeSerializer(
-            subscriptions,
+            [subscription.following for subscription in subscriptions],
             many=True
         )
         queryset = self.paginate_queryset(serializer.data)
@@ -47,27 +50,26 @@ class SetPasswordView(UpdateAPIView):
     serializer_class = PasswordSerializer
     model = CustomUser
     permission_classes = (IsAuthenticated,)
-    methods = ['post']
 
     def get_object(self, queryset=None):
         obj = self.request.user
         return obj
 
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             if not self.object.check_password(
-                serializer.data.get("current_password")
+                serializer.data.get('current_password')
             ):
                 return Response(
-                    {"current_password": ["Неверный пароль"]},
+                    {'current_password': ['Неверный пароль']},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            self.object.set_password(serializer.data.get("new_password"))
+            self.object.set_password(serializer.data.get('new_password'))
             self.object.save()
             return Response({'status': 'password set'})
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -76,6 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('tags',)
     permission_classes = (AuthorOrReadOnly,)
+    pagination_class = RecipePagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -83,30 +86,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         super(RecipeViewSet, self).perform_update(serializer)
 
+    @transaction.atomic
     @action(detail=True, methods=['POST', 'DELETE'])
     def favorite(self, request, pk=None):
         """Добавляет рецепт в избранное"""
         user = request.user
         recipe = get_object_or_404(Recipe, pk=pk)
+        serializer = RecipeWriteSerializer()
 
         if request.method == 'POST':
-            is_added = Favorite.objects.filter(
-                user=user, recipe=recipe).exists()
-
-            if is_added:
+            try:
+                serializer.validate_favorite(user, recipe)
+            except serializers.ValidationError as error:
                 return Response(
-                    {'detail': 'Рецепт уже добавлен в избранное'},
+                    error.detail,
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            favorite = Favorite.objects.create(user=user, recipe=recipe)
-            favorite.save()
-            recipe.is_favorited = True
-            recipe.save()
+            favorite = Favorite.create(user=user, recipe=recipe)
+
             return Response({'detail': 'Рецепт успешно добавлен в избранное'},
                             status=status.HTTP_201_CREATED)
         if request.method == 'DELETE':
-            favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
+            try:
+                favorite = serializer.validate_not_favorite(user, recipe)
+            except serializers.ValidationError as error:
+                return Response(
+                    error.detail,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             favorite.delete()
             recipe.is_favorited = False
@@ -114,6 +122,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Рецепт успешно удален из избранного'},
                             status=status.HTTP_204_NO_CONTENT)
 
+    @transaction.atomic
     @action(detail=True,
             methods=['POST', 'DELETE'],
             permission_classes=[IsAuthenticated])
@@ -121,27 +130,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Добавляет рецепт в список покупок"""
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
+        serializer = RecipeWriteSerializer()
 
         if request.method == 'POST':
-            if ShoppingCart.objects.filter(recipe=recipe, user=user).exists():
+            try:
+                serializer.validate_shopping_cart(user, recipe)
+            except serializers.ValidationError as error:
                 return Response(
-                    {'detail': 'Рецепт уже в списке покупок'},
+                    error.detail,
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            ShoppingCart.objects.create(recipe=recipe, user=user)
-            recipe.is_in_shopping_cart = True
-            recipe.save()
+            ShoppingCart.create(user=user, recipe=recipe)
 
             serializer = SubscribeRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            shopping_cart_item = ShoppingCart.objects.filter(
-                recipe=recipe, user=user)
-            if not shopping_cart_item:
+            try:
+                shopping_cart_item = serializer.validate_not_shopping_cart(
+                    user, recipe)
+            except serializers.ValidationError as error:
                 return Response(
-                    {'detail': 'Рецепт не в списке покупок'},
+                    error.detail,
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -201,14 +212,12 @@ class IngredientViewSet(viewsets.ModelViewSet):
     """Эндпоинт для работы с моделью Ingredient"""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None
 
 
 class TagViewSet(viewsets.ModelViewSet):
     """Эндпоинт для работы с моделью Tag"""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None
 
 
 class SubscribeViewSet(viewsets.ModelViewSet):
@@ -216,22 +225,22 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = RecipePagination
 
     @action(detail=True, methods=['POST', 'DELETE'])
     def subscribe(self, request, *args, **kwargs):
         """Подписка/отписка от автора"""
         author = self.get_object()
         user = request.user
+        serializer = SubscribeSerializer()
 
         if request.method == 'POST':
-            _, created = Subscribe.objects.get_or_create(
-                user=user,
-                following=author
-            )
-            if not created:
+            try:
+                serializer.validate_subscription(user, author)
+            except serializers.ValidationError as error:
                 return Response(
-                    {'detail': 'Пользователь уже подписан на данного автора'},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    error.detail,
+                    status=status.HTTP_400_BAD_REQUEST
                 )
 
             serializer = SubscribeSerializer(
@@ -243,11 +252,11 @@ class SubscribeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
 
         if request.method == 'DELETE':
-            subscription = Subscribe.objects.filter(
-                user=user, following=author)
-            if not subscription.exists():
+            try:
+                subscription = serializer.validate_unsubscription(user, author)
+            except serializers.ValidationError as error:
                 return Response(
-                    {'detail': 'Пользователь не подписан на данного автора'},
+                    error.detail,
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
