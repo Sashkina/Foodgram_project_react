@@ -52,6 +52,13 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
+Данные хоста:
+
+```
+ip: 158.160.72.109 
+adress: foodgramm.3utilities.com
+```
+
 Данные для входа в админку:
 
 ```
