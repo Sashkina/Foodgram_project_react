@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters import FilterSet, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
@@ -72,11 +73,33 @@ class SetPasswordView(UpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class RecipeFilter(FilterSet):
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        to_field_name='slug',
+        queryset=Tag.objects.all()
+    )
+    is_favorited = filters.BooleanFilter(
+        method='get_is_favorited')
+    is_in_shopping_cart = filters.BooleanFilter(
+        method='get_is_in_shopping_cart')
+
+    def get_is_favorited(self, queryset, name, value):
+        if self.request.user.is_authenticated:
+            return queryset.filter(favorite__user=self.request.user)
+        return queryset
+
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        if self.request.user.is_authenticated:
+            return queryset.filter(in_cart__user=self.request.user)
+        return queryset
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
     """Эндпоинт для работы с моделью Recipe"""
     queryset = Recipe.objects.all().order_by('-id')
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('tags',)
+    filterset_class = RecipeFilter
     permission_classes = (AuthorOrReadOnly,)
     pagination_class = RecipePagination
 
