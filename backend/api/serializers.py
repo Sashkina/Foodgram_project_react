@@ -305,8 +305,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
             )
 
         _, created = Subscribe.objects.get_or_create(
-                user=user,
-                following=author
+            user=user,
+            following=author
         )
         if not created:
             raise serializers.ValidationError(
