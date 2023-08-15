@@ -74,6 +74,7 @@ class SetPasswordView(UpdateAPIView):
 
 
 class RecipeFilter(FilterSet):
+    """Класс для фильтрации рецептов"""
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
