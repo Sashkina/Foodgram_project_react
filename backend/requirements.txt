@@ -5,3 +5,4 @@ djangorestframework-simplejwt==4.7.2
 Pillow==9.0.0
 django-filter==23.2
 python-dotenv==1.0.0
+urllib3==1.26.6
