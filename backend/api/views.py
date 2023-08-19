@@ -1,7 +1,6 @@
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django_filters import FilterSet, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
@@ -13,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from users.models import CustomUser
 
+from .filters import IngredientFilter, RecipeFilter
 from .pagination import RecipePagination
 from .permissions import AuthorOrReadOnly, ReadOnly
 from .serializers import (CustomUserSerializer, IngredientSerializer,
@@ -71,29 +71,6 @@ class SetPasswordView(UpdateAPIView):
             self.object.save()
             return Response({'status': 'password set'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class RecipeFilter(FilterSet):
-    """Класс для фильтрации рецептов"""
-    tags = filters.ModelMultipleChoiceFilter(
-        field_name='tags__slug',
-        to_field_name='slug',
-        queryset=Tag.objects.all()
-    )
-    is_favorited = filters.BooleanFilter(
-        method='get_is_favorited')
-    is_in_shopping_cart = filters.BooleanFilter(
-        method='get_is_in_shopping_cart')
-
-    def get_is_favorited(self, queryset, name, value):
-        if self.request.user.is_authenticated:
-            return queryset.filter(favorite__user=self.request.user)
-        return queryset
-
-    def get_is_in_shopping_cart(self, queryset, name, value):
-        if self.request.user.is_authenticated:
-            return queryset.filter(in_cart__user=self.request.user)
-        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -203,29 +180,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def download_shopping_cart(self, request):
         """Предлагает загрузить список покупок"""
-        shopping_cart = request.session.get('shopping_cart', {})
+        user = request.user
+        shopping_cart_items = ShoppingCart.objects.filter(user=user)
         ingredients = {}
 
-        for recipe_id, quantity in shopping_cart.items():
-            recipe = Recipe.objects.get(pk=recipe_id)
+        for item in shopping_cart_items:
+            recipe = item.recipe
             for ingredient_recipe in recipe.ingredientrecipe_set.all():
                 ingredient = ingredient_recipe.ingredient
                 name = ingredient.name
                 unit = ingredient.measurement_unit
                 if name in ingredients:
                     ingredients[name]['quantity'] \
-                        += ingredient_recipe.amount \
-                        * quantity
+                        += ingredient_recipe.amount
                 else:
                     ingredients[name] = {
-                        'quantity': ingredient_recipe.amount * quantity,
+                        'quantity': ingredient_recipe.amount,
                         'unit': unit
                     }
 
         shopping_list = ""
         for name, ingredient_data in ingredients.items():
-            shopping_list += f"{name} ({ingredient_data['unit']}) \
-                - {ingredient_data['quantity']}\n"
+            shopping_list += (f"{name} ({ingredient_data['unit']})"
+                              f" - {ingredient_data['quantity']}\n")
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] \
             = 'attachment; filename="shopping_cart.txt"'
@@ -236,6 +213,8 @@ class IngredientViewSet(viewsets.ModelViewSet):
     """Эндпоинт для работы с моделью Ingredient"""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = (IngredientFilter,)
+    search_fields = ('^name',)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -248,7 +227,7 @@ class SubscribeViewSet(viewsets.ModelViewSet):
     """Эндпоинт для работы с моделью Subscribe"""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsAuthenticated,)
     pagination_class = RecipePagination
 
     @action(detail=True, methods=['POST', 'DELETE'])

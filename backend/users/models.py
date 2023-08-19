@@ -5,12 +5,12 @@ from django.db import models
 class CustomUser(AbstractUser):
     """Кастомная модель юзера"""
     username = models.CharField(
-        max_length=50,
+        max_length=250,
         verbose_name='Логин',
         unique=True,
     )
     password = models.CharField(
-        max_length=50,
+        max_length=250,
         verbose_name='Пароль'
     )
     email = models.EmailField(
@@ -18,11 +18,11 @@ class CustomUser(AbstractUser):
         unique=True
     )
     first_name = models.CharField(
-        max_length=50,
+        max_length=250,
         verbose_name='Имя'
     )
     last_name = models.CharField(
-        max_length=50,
+        max_length=250,
         verbose_name='Фамилия'
     )
     is_subscribed = models.BooleanField(default=False)
