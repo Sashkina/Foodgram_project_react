@@ -5,7 +5,7 @@ from rest_framework.filters import SearchFilter
 
 class RecipeFilter(FilterSet):
     """Класс для фильтрации рецептов"""
-    tags = df_filters.ModelMultipleChoiceFilter(
+    tags = ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all()
@@ -18,12 +18,12 @@ class RecipeFilter(FilterSet):
 
     def get_is_favorited(self, queryset, name, value):
         if self.request.user.is_authenticated:
-            return queryset.filter(user_favorite__user=self.request.user)
+            return queryset.filter(recipe_favorite__user=self.request.user)
         return queryset
 
     def get_is_in_shopping_cart(self, queryset, name, value):
         if self.request.user.is_authenticated:
-            return queryset.filter(user_in_cart__user=self.request.user)
+            return queryset.filter(recipe_in_cart__user=self.request.user)
         return queryset
 
 
