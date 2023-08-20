@@ -121,38 +121,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True
     )
-
-    class Meta:
-        fields = (
-            'id',
-            'author',
-            'name',
-            'image',
-            'text',
-            'ingredients',
-            'tags',
-            'cooking_time',
-            'is_favorited',
-            'is_in_shopping_cart'
-        )
-        model = Recipe
-
-
-class RecipeWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор модели Recipe на создание"""
-    author = SlugRelatedField(
-        slug_field='username',
-        read_only=True,
-        default=serializers.CurrentUserDefault()
-    )
-    image = Base64ImageField()
-    ingredients = IngredientRecipeWriteSerializer(
-        many=True,
-    )
-    tags = PrimaryKeyRelatedField(
-        many=True,
-        queryset=Tag.objects.all()
-    )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
@@ -180,6 +148,38 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user
         return ShoppingCart.objects.filter(recipe=obj, user=user).exists()
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    """Сериализатор модели Recipe на создание"""
+    author = SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    image = Base64ImageField()
+    ingredients = IngredientRecipeWriteSerializer(
+        many=True,
+    )
+    tags = PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
+
+    class Meta:
+        fields = (
+            'id',
+            'author',
+            'name',
+            'image',
+            'text',
+            'ingredients',
+            'tags',
+            'cooking_time',
+            'is_favorited',
+            'is_in_shopping_cart'
+        )
+        model = Recipe
 
     def ingredients_for_recipe(self, recipe, ingredients):
         recipe_ingredient_list = []
