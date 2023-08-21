@@ -1,4 +1,4 @@
-version: '3.3'
+kversion: '3.3'
 
 volumes:
   pg_data:
@@ -10,7 +10,7 @@ services:
     image: postgres:13
     env_file: .env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data/
 
   backend:
     image: sashkina/foodgram_backend
@@ -18,8 +18,8 @@ services:
     depends_on:
       - db
     volumes:
-      - static:/backend_static
-      - media:/app/media
+      - static:/app/backend_static/
+      - media:/app/media/
 
   frontend:
     image: sashkina/foodgram_frontend
@@ -34,5 +34,5 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
-      - static:/static
-      - media:/app/media
+      - static:/app/static/
+      - media:/app/media/
