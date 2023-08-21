@@ -1,9 +1,10 @@
 import csv
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from recipes.models import Ingredient
 
-PATH_TO_UPLOAD = '/Users/kristina/Dev/foodgram-project-react/data/'
+PATH_TO_UPLOAD = f'{settings.BASE_DIR}/data/'
 
 
 class Command(BaseCommand):
