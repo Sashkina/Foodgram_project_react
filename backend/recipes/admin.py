@@ -31,6 +31,9 @@ class RecipeAdmin(admin.ModelAdmin):
         Tagline
     ]
 
+    def favorites_count(self, obj):
+        return obj.recipe_favorite.count()
+
 
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag)

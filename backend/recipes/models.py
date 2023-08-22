@@ -76,11 +76,6 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
-    def favorites_count(self):
-        return self.favorite_set.count()
-
-    favorites_count.short_description = 'Количество добавлений в избранное'
-
 
 class IngredientRecipe(models.Model):
     """Модель ингредиент-рецепт"""
