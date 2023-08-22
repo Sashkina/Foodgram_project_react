@@ -2,6 +2,7 @@ from django_filters.rest_framework import (BooleanFilter, FilterSet,
                                            ModelMultipleChoiceFilter)
 from recipes.models import Ingredient, Tag
 from rest_framework.filters import SearchFilter
+from django_filters import NumberFilter
 
 
 class RecipeFilter(FilterSet):
@@ -11,6 +12,7 @@ class RecipeFilter(FilterSet):
         to_field_name='slug',
         queryset=Tag.objects.all()
     )
+    author = NumberFilter(field_name='author__id')
 
     is_favorited = BooleanFilter(
         method='get_is_favorited')

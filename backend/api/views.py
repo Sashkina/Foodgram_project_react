@@ -25,7 +25,6 @@ class CustomUserViewSet(UserViewSet):
     """Эндпоинт для работы с моделью CustomUser"""
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = (AuthorOrReadOnly,)
     pagination_class = RecipePagination
 
     @action(
