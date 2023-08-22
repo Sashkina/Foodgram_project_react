@@ -24,7 +24,7 @@ class Tagline(admin.TabularInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     """Модель рецепта в админке"""
-    list_display = ('author', 'name')
+    list_display = ('author', 'name', 'favorites_count')
     list_filter = ('author', 'name', 'tags')
     inlines = [
         Ingredientline,
