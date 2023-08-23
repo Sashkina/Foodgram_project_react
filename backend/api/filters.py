@@ -1,8 +1,8 @@
+from django_filters import NumberFilter
 from django_filters.rest_framework import (BooleanFilter, FilterSet,
                                            ModelMultipleChoiceFilter)
 from recipes.models import Ingredient, Tag
 from rest_framework.filters import SearchFilter
-from django_filters import NumberFilter
 
 
 class RecipeFilter(FilterSet):
