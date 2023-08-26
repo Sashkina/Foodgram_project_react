@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
+from django.test import Client, TestCase
 from recipe import models
 from users import models
-from django.test import Client, TestCase
 
 
 class FoodgramAPITestCase(TestCase):
