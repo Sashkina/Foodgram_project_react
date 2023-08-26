@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from django.test import Client, TestCase
-from recipe import models
+from recipes import models
 from users import models
 
 
