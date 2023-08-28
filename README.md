@@ -5,8 +5,15 @@ Foodgram
 *Проект Foodgram позволяет пользователям публиковать рецепты,
 подписываться на публикации других пользователей, добавлять понравившиеся рецепты
 в список «Избранное», а перед походом в магазин скачивать сводный список продуктов,
-необходимых для приготовления выбранных блюд.*
+необходимых для приготовления выбранных блюд.
+Неавторизованный пользователь может просматривать рецепты на главной, рецепты по тегу,  
+рецепты конкретного автора.*
 
+### Технологии:
+<li> Python 3.9
+<li> Django 3.2.3
+<li> djangorestframework 3.12.4
+<li> djoser 2.1.0
 
 ### Как запустить проект:
 
@@ -52,55 +59,50 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
-Данные хоста:
-
-```
-ip: 158.160.72.109 
-adress: foodgramm.3utilities.com
-```
-
-Данные для входа в админку:
-
-```
-email: kri-s@list.ru  
-password: b191988
-```
-
 ### Примеры:
 
 1. **Получение списка всех рецептов**
 
-**Request sample:**
+***Request sample:***
 GET api/recipes/
 
-**Response sample:**  
+***Response sample:***
+
+```json
 {  
-&emsp;"id": 0,  
-&emsp;"tags": [  
-&emsp;&emsp;+ {...}  
-&emsp;],  
-&emsp;"author": {},  
-&emsp;"ingredients": [  
-&emsp;&emsp;+ {...}  
-&emsp;],  
-&emsp;"is_favorited": true,  
-&emsp;"is_in_shopping_cart": true,  
-&emsp;"name": "string",  
-&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
-&emsp;"text": "string",  
-&emsp;"cooking_time": 1  
-}  
+    "id": 0,  
+    "tags": [  
+        + {...}  
+    ],  
+    "author": {},  
+    "ingredients": [  
+         + {...}  
+    ],  
+    "is_favorited": true,  
+    "is_in_shopping_cart": true,  
+    "name": "string",  
+    "image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
+    "text": "string",  
+    "cooking_time": 1  
+}
+```
 
 
 2. **Добавление рецепта в список покупок**
 
-**Request sample:**
+***Request sample:***
 POST /api/recipes/{id}/shopping_cart/
 
-**Response sample:**  
+***Response sample:***
+
+```json
 {  
-&emsp;"id": 0,  
-&emsp;"name": "string",  
-&emsp;"image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
-&emsp;"cooking_time": 1  
+    "id": 0,  
+    "name": "string",  
+    "image": "http://foodgram.example.org/media/recipes/images/image.jpeg",  
+    "cooking_time": 1  
 }
+```
+
+### Автор  
+Сашкина Кристина
